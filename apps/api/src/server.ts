@@ -1,36 +1,20 @@
 import Fastify from "fastify";
-import { db } from "./db.js";
-import { connectRedis, redis } from "./redis.js";
-
+import { connectRedis } from "./queue/redis.js";
+import { healthRoutes } from "./routes/health.js";
 
 const app = Fastify({
   logger: true,
 });
 
-app.get("/health", async () => {
-  const result = await db.query("SELECT NOW()");
-  const redisResult = await redis.ping();
+app.register(healthRoutes);
 
-  return {
-    status: "ok",
-    service: "api",
-    database: "connected",
-    databaseTime: result.rows[0].now,
-    redis: redisResult,
-  };
-});
+const start = async () => {
+  await connectRedis();
 
-const start = async (): Promise<void> => {
-  try {
-    await connectRedis();
-    await app.listen({
-      port: Number(process.env.PORT ?? 3000),
-      host: "0.0.0.0",
-    });
-  } catch (error) {
-    app.log.error(error);
-    process.exit(1);
-  }
+  await app.listen({
+    port: Number(process.env.PORT ?? 3000),
+    host: "0.0.0.0",
+  });
 };
 
 void start();
