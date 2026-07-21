@@ -5,6 +5,10 @@ import {
 
 import { normalizeUrl } from "../utils/normalizeURL.js";
 
+import { fetchRobotsTxt } from "../robots/fetchRobotsTxt.js";
+import { parseRobotsTxt } from "../robots/parseRobotsTxt.js";
+import { isAllowedByRobots } from "../robots/isAllowedByRobots.js";
+
 export type CrawlResult = {
   pages: ScrapedPage[];
   visitedUrls: string[];
@@ -21,6 +25,8 @@ export async function crawlStaticSite(
   const pendingUrls: string[] = [normalizedStartUrl];
   const visitedUrls = new Set<string>();
   const pages: ScrapedPage[] = [];
+  const robotsText = await fetchRobotsTxt(startUrl);
+  const disallowedPaths = parseRobotsTxt(robotsText);
 
   while (pendingUrls.length > 0 && pages.length < maxPages) {
     const currentUrl = pendingUrls.shift();
@@ -51,6 +57,7 @@ export async function crawlStaticSite(
         if (
           belongsToSameWebsite &&
           isHttp &&
+          isAllowedByRobots(normalizedLink, disallowedPaths) &&
           !visitedUrls.has(normalizedLink) &&
           !pendingUrls.includes(normalizedLink)
         ) {
