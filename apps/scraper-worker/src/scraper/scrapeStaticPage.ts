@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import { HttpError } from "../utils/HttpError.js";
 
 export type ScrapedPage = {
   url: string;
@@ -15,10 +16,11 @@ export async function scrapeStaticPage(url: string): Promise<ScrapedPage> {
   });
 
   if (!response.ok) {
-    throw new Error(
-      `Failed to fetch ${url}. Status: ${response.status} ${response.statusText}`,
-    );
-  }
+  throw new HttpError(
+    response.status,
+    `Failed to fetch page: ${response.status}`,
+  );
+}
 
   const html = await response.text();
 

@@ -4,10 +4,11 @@ import {
 } from "../scraper/scrapeStaticPage.js";
 
 import { normalizeUrl } from "../utils/normalizeURL.js";
-
+import { delay } from "../utils/delay.js";
 import { fetchRobotsTxt } from "../robots/fetchRobotsTxt.js";
 import { parseRobotsTxt } from "../robots/parseRobotsTxt.js";
 import { isAllowedByRobots } from "../robots/isAllowedByRobots.js";
+import { retry } from "../utils/retry.js";
 
 export type CrawlResult = {
   pages: ScrapedPage[];
@@ -17,6 +18,8 @@ export type CrawlResult = {
 export async function crawlStaticSite(
   startUrl: string,
   maxPages = 5,
+  delayMilliseconds = 500,
+  maxRetryAttempts = 3,
 ): Promise<CrawlResult> {
   const normalizedStartUrl = normalizeUrl(startUrl);
   const start = new URL(normalizedStartUrl);
@@ -27,6 +30,7 @@ export async function crawlStaticSite(
   const pages: ScrapedPage[] = [];
   const robotsText = await fetchRobotsTxt(startUrl);
   const disallowedPaths = parseRobotsTxt(robotsText);
+  let hasAttemptedRequest = false;
 
   while (pendingUrls.length > 0 && pages.length < maxPages) {
     const currentUrl = pendingUrls.shift();
@@ -36,11 +40,19 @@ export async function crawlStaticSite(
     }
 
     visitedUrls.add(currentUrl);
+    if (hasAttemptedRequest) {
+      console.log(`Waiting ${delayMilliseconds} ms...`);
+      await delay(delayMilliseconds);
+    }
 
+    hasAttemptedRequest = true;
     try {
       console.log(`Crawling: ${currentUrl}`);
 
-      const page = await scrapeStaticPage(currentUrl);
+      const page = await retry(
+        () => scrapeStaticPage(currentUrl),
+        maxRetryAttempts,
+      );
       pages.push(page);
 
       for (const link of page.links) {
