@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "bullmq": "^5.80.10",
     "cheerio": "^1.1.2",
     "dotenv": "^17.4.2"
   },
