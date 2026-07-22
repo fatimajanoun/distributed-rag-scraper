@@ -34,7 +34,7 @@ export const scraperWorker = new Worker<
 
   {
     connection: redisConnection,
-    concurrency: SCRAPER_CONCURRENCY,
+    concurrency: SCRAPER_CONCURRENCY ?? 2,
   },
 );
 
