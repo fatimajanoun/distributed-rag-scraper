@@ -6,6 +6,7 @@ import {
 } from "../queues/scrapeQueue.js";
 import { redisConnection } from "../queues/redisConnection.js";
 import { retry } from "../utils/retry.js";
+import { saveScrapedPage } from "@rag-scraper/database";
 import {
   scrapeStaticPage,
   type ScrapedPage,
@@ -29,6 +30,7 @@ export const scraperWorker = new Worker<
       MAX_RETRY_ATTEMPTS,
     );
 
+    await saveScrapedPage(page);
     return page;
   },
 
