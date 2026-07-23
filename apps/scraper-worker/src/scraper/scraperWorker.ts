@@ -30,7 +30,12 @@ export const scraperWorker = new Worker<
       MAX_RETRY_ATTEMPTS,
     );
 
-    await saveScrapedPage(page);
+    const result = await saveScrapedPage(page);
+
+    console.log(
+      `Page ${page.url} was ${result.status}`,
+    );
+
     return page;
   },
 
