@@ -1,5 +1,5 @@
 import { Worker } from "bullmq";
-
+import { scrapeDlq } from "../queues/scrapeDlQ.js";
 import type { ScrapeJob } from "../jobs/scrapeJob.js";
 import {
   SCRAPE_QUEUE_NAME,
@@ -51,11 +51,33 @@ scraperWorker.on("completed", (job) => {
   );
 });
 
-scraperWorker.on("failed", (job, error) => {
+scraperWorker.on("failed", async (job, error) => {
   console.error(
     `Scrape job ${job?.id ?? "unknown"} failed:`,
     error.message,
   );
+
+  if (!job) {
+    return;
+  }
+
+  try {
+    await scrapeDlq.add("failed-scrape", {
+      originalJobId: job.id,
+      url: job.data.url,
+      error: error.message,
+      failedAt: new Date().toISOString(),
+    });
+
+    console.log(
+      `Scrape job ${job.id} moved to DLQ`,
+    );
+  } catch (dlqError) {
+    console.error(
+      `Failed to move scrape job ${job.id} to DLQ:`,
+      dlqError,
+    );
+  }
 });
 
 scraperWorker.on("error", (error) => {
