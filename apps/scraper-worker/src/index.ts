@@ -1,4 +1,10 @@
 import "./crawler/crawlerWorker.js";
 import "./scraper/scraperWorker.js";
+import os from "node:os";
 
-console.log("Crawler and scraper workers started.");
+const workerId =
+  process.env.WORKER_ID ??
+  `${os.hostname()}-${process.pid}`;
+console.log(
+  `[${workerId}] Crawler and scraper workers started.`,
+);

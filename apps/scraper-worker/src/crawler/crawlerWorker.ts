@@ -18,7 +18,7 @@ import {
 import type { ScrapedPage } from "../scraper/scrapeStaticPage.js";
 import { normalizeUrl } from "../utils/normalizeURL.js";
 import { parseRobotsTxt } from "../robots/parseRobotsTxt.js";
-
+import { workerId } from "../config/workerId.js";
 const CRAWLER_CONCURRENCY = Number(
     process.env.CRAWLER_CONCURRENCY ?? 2,
 );
@@ -50,8 +50,8 @@ export const crawlerWorker = new Worker<CrawlJob>(
         const { url, depth } = job.data;
 
         console.log(
-            `Crawler worker processing ${url} at depth ${depth}`,
-        );
+  `[${workerId}] Crawler worker processing ${job.data.url} at depth ${job.data.depth}`,
+);
 
         /*
          * 1. Check robots.txt before requesting the page.

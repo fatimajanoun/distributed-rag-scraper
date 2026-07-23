@@ -11,6 +11,7 @@ import {
   scrapeStaticPage,
   type ScrapedPage,
 } from "./scrapeStaticPage.js";
+import { workerId } from "../config/workerId.js";
 const MAX_RETRY_ATTEMPTS = 3;
 const SCRAPER_CONCURRENCY = 2;
 
@@ -21,9 +22,9 @@ export const scraperWorker = new Worker<
   SCRAPE_QUEUE_NAME,
 
   async (job) => {
-    console.log(
-      `Scraper worker processing ${job.data.url}`,
-    );
+     console.log(
+    `[${workerId}] Scraper worker processing ${job.data.url}`,
+  );
 
     const page = await retry(
       () => scrapeStaticPage(job.data.url),
