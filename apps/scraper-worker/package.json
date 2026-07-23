@@ -13,6 +13,7 @@
     "crawl": "tsx src/producer/startCrawl.ts"
   },
   "dependencies": {
+    "@rag-scraper/database": "*",
     "bullmq": "^5.80.10",
     "cheerio": "^1.1.2",
     "dotenv": "^17.4.2"

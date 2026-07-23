@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { db } from "../database/db.js";
+import { db } from "../../../../packages/database/src/db.js";
 import { redis } from "../queue/redis.js";
 
 export async function healthRoutes(app: FastifyInstance) {

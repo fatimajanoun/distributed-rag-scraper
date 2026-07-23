@@ -5,6 +5,8 @@ export type ScrapedPage = {
   url: string;
   title: string;
   text: string;
+  rawHtml: string;
+  statusCode: number;
   links: string[];
 };
 
@@ -57,6 +59,8 @@ export async function scrapeStaticPage(url: string): Promise<ScrapedPage> {
     url,
     title,
     text,
+    rawHtml:html,
+    statusCode: response.status,
     links: [...new Set(links)],
   };
 }
