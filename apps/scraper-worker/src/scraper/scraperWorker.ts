@@ -12,6 +12,7 @@ import {
   type ScrapedPage,
 } from "./scrapeStaticPage.js";
 import { workerId } from "../config/workerId.js";
+import { scrapeDynamicPage } from "./scrapeDynamicPage.js";
 const MAX_RETRY_ATTEMPTS = 3;
 const SCRAPER_CONCURRENCY = 2;
 
@@ -23,11 +24,15 @@ export const scraperWorker = new Worker<
 
   async (job) => {
      console.log(
-    `[${workerId}] Scraper worker processing ${job.data.url}`,
-  );
-
+  `[${workerId}] Using ${
+    job.data.renderJavaScript ? "dynamic" : "static"
+  } scraper for ${job.data.url}`,
+);
     const page = await retry(
-      () => scrapeStaticPage(job.data.url),
+      () =>
+        job.data.renderJavaScript
+        ? scrapeDynamicPage(job.data.url)
+        : scrapeStaticPage(job.data.url),
       MAX_RETRY_ATTEMPTS,
     );
 

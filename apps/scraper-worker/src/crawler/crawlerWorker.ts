@@ -82,6 +82,7 @@ export const crawlerWorker = new Worker<CrawlJob>(
         const scrapeJobData: ScrapeJob = {
             url,
             crawlJobId: String(job.id),
+            renderJavaScript: url.includes("/js/"),
         };
 
         const scrapeJob = await scrapeQueue.add(

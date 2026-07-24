@@ -16,7 +16,8 @@
     "@rag-scraper/database": "*",
     "bullmq": "^5.80.10",
     "cheerio": "^1.1.2",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "playwright": "^1.61.1"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
