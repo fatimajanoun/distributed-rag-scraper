@@ -21,7 +21,13 @@ export interface ScrapedPageForProcessing {
 export async function findPageForProcessing(
   pageId: number,
 ): Promise<ScrapedPageForProcessing | null> {
-  const result = await db.query<ScrapedPageForProcessing>(
+  const result = await db.query<{
+    id: string;
+    url: string;
+    title: string | null;
+    content: string;
+    contentHash: string;
+  }>(
     `
       SELECT
         id,
@@ -35,7 +41,16 @@ export async function findPageForProcessing(
     [pageId],
   );
 
-  return result.rows[0] ?? null;
+  const page = result.rows[0];
+
+  if (!page) {
+    return null;
+  }
+
+  return {
+    ...page,
+    id: Number(page.id),
+  };
 }
 
 async function insertChunks(

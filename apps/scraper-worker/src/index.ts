@@ -1,10 +1,11 @@
-import "./crawler/crawlerWorker.js";
-import "./scraper/scraperWorker.js";
-import os from "node:os";
+import dotenv from "dotenv";
+import path from "node:path";
 
-const workerId =
-  process.env.WORKER_ID ??
-  `${os.hostname()}-${process.pid}`;
-console.log(
-  `[${workerId}] Crawler and scraper workers started.`,
-);
+dotenv.config({
+  path: path.resolve(process.cwd(), "../../.env"),
+});
+
+await import("./crawler/crawlerWorker.js");
+await import("./scraper/scraperWorker.js");
+
+console.log("Crawler and scraper workers started.");

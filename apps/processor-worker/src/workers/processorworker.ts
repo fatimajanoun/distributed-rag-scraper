@@ -1,22 +1,30 @@
 import { Worker } from "bullmq";
-import type { ProcessPageJobData } from "@rag-scraper/shared";
+
 import {
   PROCESS_QUEUE_NAME,
   processPageContent,
+  type ProcessPageJobData,
 } from "@rag-scraper/shared";
+
 import {
   findPageForProcessing,
   replacePageChunks,
 } from "@rag-scraper/database";
+
 import { redisConnection } from "../queues/redisConnection.js";
 
 const PROCESSOR_CONCURRENCY = 2;
-
+console.log("Consumer queue name:", PROCESS_QUEUE_NAME);
+console.log("Consumer Redis:", redisConnection);
 export const processorWorker = new Worker<ProcessPageJobData>(
   PROCESS_QUEUE_NAME,
 
   async (job) => {
     const { pageId, contentHash } = job.data;
+
+    console.log(
+      `Processing page ${pageId} from job ${job.id ?? "unknown"}`,
+    );
 
     const page = await findPageForProcessing(pageId);
 
@@ -26,7 +34,7 @@ export const processorWorker = new Worker<ProcessPageJobData>(
 
     if (page.contentHash !== contentHash) {
       console.log(
-        `Skipping stale processing job ${job.id} for page ${pageId}`,
+        `Skipping stale job ${job.id ?? "unknown"} for page ${pageId}`,
       );
 
       return;
@@ -37,7 +45,7 @@ export const processorWorker = new Worker<ProcessPageJobData>(
     await replacePageChunks(pageId, chunks);
 
     console.log(
-      `Processed page ${pageId}: ${chunks.length} chunks created`,
+      `Page ${pageId} processed successfully: ${chunks.length} chunks saved`,
     );
   },
 
@@ -48,7 +56,9 @@ export const processorWorker = new Worker<ProcessPageJobData>(
 );
 
 processorWorker.on("completed", (job) => {
-  console.log(`Processing job ${job.id} completed`);
+  console.log(
+    `Processing job ${job.id ?? "unknown"} completed`,
+  );
 });
 
 processorWorker.on("failed", (job, error) => {
@@ -60,4 +70,10 @@ processorWorker.on("failed", (job, error) => {
 
 processorWorker.on("error", (error) => {
   console.error("Processor worker error:", error);
+});
+
+processorWorker.on("ready", () => {
+  console.log(
+    `Processor worker is ready and listening to ${PROCESS_QUEUE_NAME}`,
+  );
 });

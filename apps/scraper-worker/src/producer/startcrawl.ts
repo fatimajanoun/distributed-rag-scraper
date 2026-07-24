@@ -1,4 +1,9 @@
-import { crawlStaticSite } from "../crawler/crawlStaticSite.js";
+import dotenv from "dotenv";
+import path from "node:path";
+
+dotenv.config({
+  path: path.resolve(process.cwd(), "../../.env"),
+});
 
 async function startCrawl(): Promise<void> {
   const rawUrl = process.argv[2];
@@ -13,7 +18,16 @@ async function startCrawl(): Promise<void> {
   }
 
   try {
+    const { crawlStaticSite } = await import(
+      "../crawler/crawlStaticSite.js"
+    );
+
     const url = new URL(rawUrl).toString();
+
+    console.log("Crawl command Redis:", {
+      host: process.env.REDIS_HOST,
+      port: process.env.REDIS_PORT,
+    });
 
     await crawlStaticSite(url);
 

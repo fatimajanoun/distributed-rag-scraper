@@ -18,3 +18,5 @@ export const processQueueEvents = new QueueEvents(
     connection: redisConnection,
   },
 );
+console.log("Producer queue name:", PROCESS_QUEUE_NAME);
+console.log("Producer Redis:", redisConnection);

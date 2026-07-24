@@ -39,7 +39,9 @@ export const scraperWorker = new Worker<
 
     const result = await saveScrapedPage(page);
 
-    if (result.status !== "unchanged") {
+console.log(`Page ${page.url} was ${result.status}`);
+
+if (result.status !== "unchanged") {
   await processQueue.add(
     "process-page",
     {
@@ -58,14 +60,12 @@ export const scraperWorker = new Worker<
     },
   );
 
-  
+  console.log(
+    `Page ${page.url} added to processing queue`,
+  );
+}
 
-    console.log(
-      `Page ${page.url} was ${result.status}`,
-    );
-  }
-    return page;
-  },
+return page;},
 
   {
     connection: redisConnection,

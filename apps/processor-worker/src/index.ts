@@ -1,3 +1,10 @@
-import "./workers/processorworker.js";
+import dotenv from "dotenv";
+import path from "node:path";
+
+dotenv.config({
+  path: path.resolve(process.cwd(), "../../.env"),
+});
+
+await import("./workers/processorworker.js");
 
 console.log("Processor worker started");
