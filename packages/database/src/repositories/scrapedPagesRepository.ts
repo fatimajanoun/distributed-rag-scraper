@@ -1,5 +1,6 @@
 import { db } from "../db.js";
 import { generateContentHash } from "../utils/hash.js";
+import { saveScrapedPageSchema } from "../schemas/scrapedPageSchema.js";
 
 export type SaveScrapedPageInput = {
   url: string;
@@ -18,7 +19,16 @@ export type SaveScrapedPageResult = {
 export async function saveScrapedPage(
   page: SaveScrapedPageInput,
 ): Promise<SaveScrapedPageResult> {
-  const contentHash = generateContentHash(page.text);
+  const validationResult = saveScrapedPageSchema.safeParse(page);
+
+  if (!validationResult.success) {
+    throw new Error(
+      `Invalid scraped page data: ${validationResult.error.message}`,
+    );
+  }
+
+  const validatedPage = validationResult.data;
+  const contentHash = generateContentHash(validatedPage.text);
 
   const existingPage = await db.query<{
     id: string;
@@ -29,7 +39,7 @@ export async function saveScrapedPage(
       FROM scraped_pages
       WHERE url = $1
     `,
-    [page.url],
+    [validatedPage.url],
   );
 
   if (existingPage.rowCount === 0) {
@@ -50,12 +60,12 @@ export async function saveScrapedPage(
         RETURNING id
       `,
       [
-        page.url,
-        page.title,
-        page.rawHtml,
-        page.text,
+        validatedPage.url,
+        validatedPage.title,
+        validatedPage.rawHtml,
+        validatedPage.text,
         contentHash,
-        page.statusCode,
+        validatedPage.statusCode,
       ],
     );
 
@@ -110,11 +120,11 @@ export async function saveScrapedPage(
     `,
     [
       currentPage.id,
-      page.title,
-      page.rawHtml,
-      page.text,
+      validatedPage.title,
+      validatedPage.rawHtml,
+      validatedPage.text,
       contentHash,
-      page.statusCode,
+      validatedPage.statusCode,
     ],
   );
 
