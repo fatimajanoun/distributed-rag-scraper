@@ -1,5 +1,8 @@
-import * as cheerio from "cheerio";
 import { chromium } from "playwright";
+import {
+  buildPageContent,
+  extractPageContent,
+} from "@rag-scraper/shared";
 
 import type { ScrapedPage } from "./scrapeStaticPage.js";
 
@@ -18,49 +21,33 @@ export async function scrapeDynamicPage(
       timeout: 30_000,
     });
 
-    // Give JavaScript a little time to render the page content.
+    // Give JavaScript time to render the page content.
     await page.waitForTimeout(2_000);
 
     const rawHtml = await page.content();
     const finalUrl = page.url();
     const statusCode = response?.status() ?? 200;
 
-    const $ = cheerio.load(rawHtml);
+    const extracted = extractPageContent(
+      rawHtml,
+      finalUrl,
+    );
 
-    const title = $("title").text().trim();
-
-    // Remove elements that usually add noise.
-    $("script, style, noscript").remove();
-
-    const text = $("body")
-      .text()
-      .replace(/\s+/g, " ")
-      .trim();
-
-    const links = $("a[href]")
-      .map((_, element) => {
-        const href = $(element).attr("href");
-
-        if (!href) {
-          return null;
-        }
-
-        try {
-          return new URL(href, finalUrl).toString();
-        } catch {
-          return null;
-        }
-      })
-      .get()
-      .filter((link): link is string => Boolean(link));
+    const content = buildPageContent({
+      bodyText: extracted.bodyText,
+      tables: extracted.tables,
+      linkedDocuments: extracted.linkedDocuments,
+    });
 
     return {
       url: finalUrl,
-      title,
-      text,
+      title: extracted.title,
+      text: content,
+      tables: extracted.tables,
+      linkedDocuments: extracted.linkedDocuments,
       rawHtml,
       statusCode,
-      links: [...new Set(links)],
+      links: extracted.links,
     };
   } finally {
     await browser.close();

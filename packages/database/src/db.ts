@@ -1,7 +1,10 @@
+import path from "node:path";
 import dotenv from "dotenv";
 import { Pool } from "pg";
 
-dotenv.config();
+dotenv.config({
+  path: path.resolve(process.cwd(), "../../.env"),
+});
 
 const databaseUrl = process.env.DATABASE_URL;
 

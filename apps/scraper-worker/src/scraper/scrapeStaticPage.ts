@@ -1,10 +1,18 @@
 import * as cheerio from "cheerio";
 import { HttpError } from "../utils/HttpError.js";
-
+import { extractPageContent } from "@rag-scraper/shared";
+import {
+  buildPageContent,
+} from "@rag-scraper/shared";
 export type ScrapedPage = {
   url: string;
   title: string;
   text: string;
+  tables: string[];
+  linkedDocuments: {
+    text: string;
+    url: string;
+  }[];
   rawHtml: string;
   statusCode: number;
   links: string[];
@@ -24,43 +32,24 @@ export async function scrapeStaticPage(url: string): Promise<ScrapedPage> {
   );
 }
 
-  const html = await response.text();
+  const rawHtml = await response.text();
 
-  const $ = cheerio.load(html);
+  const extracted = extractPageContent(rawHtml, url);
 
-  // Remove elements that normally do not contain useful page content.
-  $("script, style, noscript").remove();
-
-  const title = $("title").first().text().trim();
-
-  const text = $("body")
-  .text()
-  .replace(/\s+/g, " ")
-  .trim();
-
-  const links = $("a[href]")
-    .map((_, element) => {
-      const href = $(element).attr("href");
-
-      if (!href) {
-        return null;
-      }
-
-      try {
-        return new URL(href, url).toString();
-      } catch {
-        return null;
-      }
-    })
-    .get()
-    .filter((link): link is string => link !== null);
+  const text = buildPageContent({
+  bodyText: extracted.bodyText,
+  tables: extracted.tables,
+  linkedDocuments: extracted.linkedDocuments,
+});
 
   return {
     url,
-    title,
+    title: extracted.title,
     text,
-    rawHtml:html,
+    tables: extracted.tables,
+    linkedDocuments: extracted.linkedDocuments,
+    rawHtml,
     statusCode: response.status,
-    links: [...new Set(links)],
+    links: extracted.links,
   };
 }

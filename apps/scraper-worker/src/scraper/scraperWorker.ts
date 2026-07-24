@@ -36,7 +36,6 @@ export const scraperWorker = new Worker<
         : scrapeStaticPage(job.data.url),
       MAX_RETRY_ATTEMPTS,
     );
-
     const result = await saveScrapedPage(page);
 
 console.log(`Page ${page.url} was ${result.status}`);
