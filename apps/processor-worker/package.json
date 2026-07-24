@@ -1,0 +1,23 @@
+{
+  "name": "@rag-scraper/processor-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rag-scraper/database": "*",
+    "@rag-scraper/shared": "*",
+    "bullmq": "^5.0.0",
+    "dotenv": "^17.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}

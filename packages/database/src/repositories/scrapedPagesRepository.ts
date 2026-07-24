@@ -10,6 +10,8 @@ export type SaveScrapedPageInput = {
 };
 
 export type SaveScrapedPageResult = {
+  pageId: number;
+  contentHash: string;
   status: "inserted" | "updated" | "unchanged";
 };
 
@@ -19,10 +21,11 @@ export async function saveScrapedPage(
   const contentHash = generateContentHash(page.text);
 
   const existingPage = await db.query<{
+    id: string;
     content_hash: string;
   }>(
     `
-      SELECT content_hash
+      SELECT id, content_hash
       FROM scraped_pages
       WHERE url = $1
     `,
@@ -30,7 +33,7 @@ export async function saveScrapedPage(
   );
 
   if (existingPage.rowCount === 0) {
-    await db.query(
+    const insertedPage = await db.query<{ id: string }>(
       `
         INSERT INTO scraped_pages (
           url,
@@ -44,6 +47,7 @@ export async function saveScrapedPage(
           updated_at
         )
         VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW(), NOW())
+        RETURNING id
       `,
       [
         page.url,
@@ -55,23 +59,40 @@ export async function saveScrapedPage(
       ],
     );
 
-    return { status: "inserted" };
+    const insertedId = insertedPage.rows[0]?.id;
+
+    if (!insertedId) {
+      throw new Error("Failed to retrieve inserted page ID");
+    }
+
+    return {
+      pageId: Number(insertedId),
+      contentHash,
+      status: "inserted",
+    };
   }
 
-  const oldHash = existingPage.rows[0]?.content_hash;
+  const currentPage = existingPage.rows[0];
 
-  if (oldHash === contentHash) {
+  if (!currentPage) {
+    throw new Error("Existing page was not returned");
+  }
+
+  if (currentPage.content_hash === contentHash) {
     await db.query(
       `
         UPDATE scraped_pages
-        SET
-          last_scraped_at = NOW()
-        WHERE url = $1
+        SET last_scraped_at = NOW()
+        WHERE id = $1
       `,
-      [page.url],
+      [currentPage.id],
     );
 
-    return { status: "unchanged" };
+    return {
+      pageId: Number(currentPage.id),
+      contentHash,
+      status: "unchanged",
+    };
   }
 
   await db.query(
@@ -85,10 +106,10 @@ export async function saveScrapedPage(
         status_code = $6,
         last_scraped_at = NOW(),
         updated_at = NOW()
-      WHERE url = $1
+      WHERE id = $1
     `,
     [
-      page.url,
+      currentPage.id,
       page.title,
       page.rawHtml,
       page.text,
@@ -97,5 +118,9 @@ export async function saveScrapedPage(
     ],
   );
 
-  return { status: "updated" };
+  return {
+    pageId: Number(currentPage.id),
+    contentHash,
+    status: "updated",
+  };
 }

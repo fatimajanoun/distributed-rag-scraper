@@ -13,6 +13,7 @@ import {
 } from "./scrapeStaticPage.js";
 import { workerId } from "../config/workerId.js";
 import { scrapeDynamicPage } from "./scrapeDynamicPage.js";
+import { processQueue } from "../queues/processQueue.js";
 const MAX_RETRY_ATTEMPTS = 3;
 const SCRAPER_CONCURRENCY = 2;
 
@@ -38,10 +39,31 @@ export const scraperWorker = new Worker<
 
     const result = await saveScrapedPage(page);
 
+    if (result.status !== "unchanged") {
+  await processQueue.add(
+    "process-page",
+    {
+      pageId: result.pageId,
+      contentHash: result.contentHash,
+    },
+    {
+      jobId: `process-page-${result.pageId}-${result.contentHash}`,
+      attempts: 3,
+      backoff: {
+        type: "exponential",
+        delay: 2000,
+      },
+      removeOnComplete: true,
+      removeOnFail: false,
+    },
+  );
+
+  
+
     console.log(
       `Page ${page.url} was ${result.status}`,
     );
-
+  }
     return page;
   },
 
