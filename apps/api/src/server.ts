@@ -2,12 +2,17 @@ import Fastify from "fastify";
 import { connectRedis } from "./queue/redis.js";
 import { healthRoutes } from "./routes/health.js";
 import {askRoutes} from "./routes/ask.js";
+import { pagesRoutes } from "./routes/pages.js";
 const app = Fastify({
   logger: true,
 });
 
 app.register(healthRoutes);
+
 await app.register(askRoutes, {
+  prefix: "/api",
+});
+await app.register(pagesRoutes, {
   prefix: "/api",
 });
 const start = async () => {

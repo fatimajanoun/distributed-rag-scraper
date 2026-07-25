@@ -171,4 +171,109 @@ export async function saveScrapedPage(
   } finally {
     client.release();
   }
+}export interface ScrapedPageSummary {
+  id: number;
+  url: string;
+  title: string | null;
+  statusCode: number;
+  firstScrapedAt: Date;
+  lastScrapedAt: Date;
+}
+
+
+export interface ScrapedPageDetails {
+  id: number;
+  url: string;
+  title: string | null;
+  content: string;
+  rawHtml: string;
+  statusCode: number;
+  firstScrapedAt: Date;
+  lastScrapedAt: Date;
+}
+
+
+export async function findAllScrapedPages(
+  limit = 20,
+  offset = 0,
+): Promise<ScrapedPageSummary[]> {
+
+  const result = await db.query<{
+    id: string;
+    url: string;
+    title: string | null;
+    statusCode: number;
+    firstScrapedAt: Date;
+    lastScrapedAt: Date;
+  }>(
+    `
+      SELECT
+        id,
+        url,
+        title,
+        status_code AS "statusCode",
+        first_scraped_at AS "firstScrapedAt",
+        last_scraped_at AS "lastScrapedAt"
+      FROM scraped_pages
+      ORDER BY first_scraped_at DESC
+      LIMIT $1
+      OFFSET $2
+    `,
+    [
+      limit,
+      offset,
+    ],
+  );
+
+
+  return result.rows.map((page) => ({
+    ...page,
+    id: Number(page.id),
+  }));
+}
+
+
+
+export async function findScrapedPageById(
+  id: number,
+): Promise<ScrapedPageDetails | null> {
+
+  const result = await db.query<{
+    id: string;
+    url: string;
+    title: string | null;
+    content: string;
+    rawHtml: string;
+    statusCode: number;
+    firstScrapedAt: Date;
+    lastScrapedAt: Date;
+  }>(
+    `
+      SELECT
+        id,
+        url,
+        title,
+        content,
+        raw_html AS "rawHtml",
+        status_code AS "statusCode",
+        first_scraped_at AS "firstScrapedAt",
+        last_scraped_at AS "lastScrapedAt"
+      FROM scraped_pages
+      WHERE id = $1
+    `,
+    [id],
+  );
+
+
+  const page = result.rows[0];
+
+  if (!page) {
+    return null;
+  }
+
+
+  return {
+    ...page,
+    id: Number(page.id),
+  };
 }
