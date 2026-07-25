@@ -139,9 +139,10 @@ export async function countPageChunks(
 export interface SimilarChunk {
   id: number;
   pageId: number;
-  url: string;
   content: string;
   distance: number;
+  url: string;
+  title: string | null;
 }
 export async function searchSimilarChunks(
   queryEmbedding: number[],
@@ -149,39 +150,42 @@ export async function searchSimilarChunks(
 ): Promise<SimilarChunk[]> {
 
   const result = await db.query<{
-    id: string;
-    pageId: string;
-    url:string;
-    content: string;
-    distance: number;
-  }>(
-    `
-      SELECT
-        pc.id,
-        pc.page_id AS "pageId",
-        sp.url,
-        pc.content,
-        pc.embedding <=> $1::vector AS distance
-      FROM page_chunks pc
-      JOIN scraped_pages sp
+  id: string;
+  pageId: string;
+  content: string;
+  distance: number;
+  url: string;
+  title: string | null;
+}>(
+  `
+    SELECT
+      pc.id,
+      pc.page_id AS "pageId",
+      pc.content,
+      sp.url,
+      sp.title,
+      pc.embedding <=> $1::vector AS distance
+    FROM page_chunks pc
+    JOIN scraped_pages sp
       ON sp.id = pc.page_id
-      WHERE pc.embedding IS NOT NULL
-      ORDER BY pc.embedding <=> $1::vector
-      LIMIT $2
-    `,
-    [
-      `[${queryEmbedding.join(",")}]`,
-      limit,
-    ],
-  );
+    WHERE pc.embedding IS NOT NULL
+    ORDER BY pc.embedding <=> $1::vector
+    LIMIT $2
+  `,
+  [
+    `[${queryEmbedding.join(",")}]`,
+    limit,
+  ],
+);
 
   return result.rows.map((row) => ({
-    id: Number(row.id),
-    pageId: Number(row.pageId),
-    url: row.url,
-    content: row.content,
-    distance: row.distance,
-  }));
+  id: Number(row.id),
+  pageId: Number(row.pageId),
+  content: row.content,
+  distance: row.distance,
+  url: row.url,
+  title: row.title,
+}));
 }
 export interface PageChunkResponse {
   id: number;
@@ -226,5 +230,53 @@ export async function findChunksByPageId(
   return result.rows.map((chunk) => ({
     ...chunk,
     id: Number(chunk.id),
+  }));
+}
+export async function searchKeywordChunks(
+  query: string,
+  limit = 5,
+): Promise<SimilarChunk[]> {
+
+  const result = await db.query<{
+    id: string;
+    pageId: string;
+    content: string;
+    distance: number;
+    url: string;
+    title: string | null;
+  }>(
+    `
+      SELECT
+        pc.id,
+        pc.page_id AS "pageId",
+        pc.content,
+        sp.url,
+        sp.title,
+        ts_rank(
+          to_tsvector('english', pc.content),
+          plainto_tsquery('english', $1)
+        ) AS distance
+      FROM page_chunks pc
+      JOIN scraped_pages sp
+        ON sp.id = pc.page_id
+      WHERE to_tsvector('english', pc.content)
+        @@ plainto_tsquery('english', $1)
+      ORDER BY distance DESC
+      LIMIT $2
+    `,
+    [
+      query,
+      limit,
+    ],
+  );
+
+
+  return result.rows.map((row) => ({
+    id: Number(row.id),
+    pageId: Number(row.pageId),
+    content: row.content,
+    distance: row.distance,
+    url: row.url,
+    title: row.title,
   }));
 }

@@ -4,6 +4,8 @@ import { healthRoutes } from "./routes/health.js";
 import {askRoutes} from "./routes/ask.js";
 import { pagesRoutes } from "./routes/pages.js";
 import { chunksRoutes } from "./routes/chunks.js";
+import { searchRoutes } from "./routes/semanticSearch.js";
+import { keywordSearchRoutes } from "./routes/keywordSearch.js";
 const app = Fastify({
   logger: true,
 });
@@ -22,6 +24,19 @@ await app.register(
     prefix: "/api",
   },
 );
+await app.register(
+  searchRoutes,
+  {
+    prefix: "/api",
+  },
+);
+await app.register(
+  keywordSearchRoutes,
+  {
+    prefix: "/api",
+  },
+);
+
 const start = async () => {
   await connectRedis();
 
