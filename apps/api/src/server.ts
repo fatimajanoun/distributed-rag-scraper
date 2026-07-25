@@ -3,6 +3,7 @@ import { connectRedis } from "./queue/redis.js";
 import { healthRoutes } from "./routes/health.js";
 import {askRoutes} from "./routes/ask.js";
 import { pagesRoutes } from "./routes/pages.js";
+import { chunksRoutes } from "./routes/chunks.js";
 const app = Fastify({
   logger: true,
 });
@@ -15,6 +16,12 @@ await app.register(askRoutes, {
 await app.register(pagesRoutes, {
   prefix: "/api",
 });
+await app.register(
+  chunksRoutes,
+  {
+    prefix: "/api",
+  },
+);
 const start = async () => {
   await connectRedis();
 

@@ -183,3 +183,48 @@ export async function searchSimilarChunks(
     distance: row.distance,
   }));
 }
+export interface PageChunkResponse {
+  id: number;
+  chunkIndex: number;
+  content: string;
+  characterCount: number;
+  wordCount: number;
+  embeddedAt: Date | null;
+}
+
+
+export async function findChunksByPageId(
+  pageId: number,
+): Promise<PageChunkResponse[]> {
+
+  const result = await db.query<{
+    id: string;
+    chunkIndex: number;
+    content: string;
+    characterCount: number;
+    wordCount: number;
+    embeddedAt: Date | null;
+  }>(
+    `
+      SELECT
+        id,
+        chunk_index AS "chunkIndex",
+        content,
+        character_count AS "characterCount",
+        word_count AS "wordCount",
+        embedded_at AS "embeddedAt"
+      FROM page_chunks
+      WHERE page_id = $1
+      ORDER BY chunk_index ASC
+    `,
+    [
+      pageId,
+    ],
+  );
+
+
+  return result.rows.map((chunk) => ({
+    ...chunk,
+    id: Number(chunk.id),
+  }));
+}
