@@ -135,3 +135,51 @@ export async function countPageChunks(
 
   return Number(result.rows[0]?.count ?? 0);
 }
+
+export interface SimilarChunk {
+  id: number;
+  pageId: number;
+  url: string;
+  content: string;
+  distance: number;
+}
+export async function searchSimilarChunks(
+  queryEmbedding: number[],
+  limit = 5,
+): Promise<SimilarChunk[]> {
+
+  const result = await db.query<{
+    id: string;
+    pageId: string;
+    url:string;
+    content: string;
+    distance: number;
+  }>(
+    `
+      SELECT
+        pc.id,
+        pc.page_id AS "pageId",
+        sp.url,
+        pc.content,
+        pc.embedding <=> $1::vector AS distance
+      FROM page_chunks pc
+      JOIN scraped_pages sp
+      ON sp.id = pc.page_id
+      WHERE pc.embedding IS NOT NULL
+      ORDER BY pc.embedding <=> $1::vector
+      LIMIT $2
+    `,
+    [
+      `[${queryEmbedding.join(",")}]`,
+      limit,
+    ],
+  );
+
+  return result.rows.map((row) => ({
+    id: Number(row.id),
+    pageId: Number(row.pageId),
+    url: row.url,
+    content: row.content,
+    distance: row.distance,
+  }));
+}

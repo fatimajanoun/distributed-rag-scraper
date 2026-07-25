@@ -12,7 +12,7 @@ import {
 } from "@rag-scraper/database";
 
 import { redisConnection } from "../queues/redisConnection.js";
-
+import { generateEmbedding } from "../../../api/src/embeddings/generateEmbedding.js";
 const PROCESSOR_CONCURRENCY = 2;
 console.log("Consumer queue name:", PROCESS_QUEUE_NAME);
 console.log("Consumer Redis:", redisConnection);
@@ -42,10 +42,26 @@ export const processorWorker = new Worker<ProcessPageJobData>(
 
     const chunks = processPageContent(page.content);
 
-    await replacePageChunks(pageId, chunks);
+    const chunksWithEmbeddings = [];
+
+    for (const chunk of chunks) {
+      const embedding = await generateEmbedding(
+        chunk.content,
+      );
+
+      chunksWithEmbeddings.push({
+        ...chunk,
+        embedding,
+      });
+    }
+
+    await replacePageChunks(
+      pageId,
+      chunksWithEmbeddings,
+    );
 
     console.log(
-      `Page ${pageId} processed successfully: ${chunks.length} chunks saved`,
+      `Page ${pageId} processed successfully: ${chunksWithEmbeddings.length} chunks saved`,
     );
   },
 
