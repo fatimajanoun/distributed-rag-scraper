@@ -1,6 +1,9 @@
 export const shorthands = undefined;
 
 export const up = (pgm) => {
+  pgm.createExtension("vector", {
+    ifNotExists: true,
+  });
   pgm.createTable("page_chunks", {
     id: {
       type: "bigserial",
@@ -37,6 +40,16 @@ export const up = (pgm) => {
     word_count: {
       type: "integer",
       notNull: true,
+    },
+
+     embedding: {
+      type: "vector(768)",
+      notNull: false,
+    },
+
+    embedded_at: {
+      type: "timestamptz",
+      notNull: false,
     },
 
     created_at: {

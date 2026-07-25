@@ -8,6 +8,7 @@ export interface PageChunkInput {
   contentHash: string;
   characterCount: number;
   wordCount: number;
+  embedding: number[];
 }
 
 export interface ScrapedPageForProcessing {
@@ -53,6 +54,12 @@ export async function findPageForProcessing(
   };
 }
 
+function formatEmbedding(
+  embedding: number[],
+): string {
+  return `[${embedding.join(",")}]`;
+}
+
 async function insertChunks(
   client: PoolClient,
   pageId: number,
@@ -67,9 +74,11 @@ async function insertChunks(
           content,
           content_hash,
           character_count,
-          word_count
+          word_count,
+          embedding,
+          embedded_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6)
+        VALUES ($1, $2, $3, $4, $5, $6, $7::vector, NOW())
       `,
       [
         pageId,
@@ -78,6 +87,7 @@ async function insertChunks(
         chunk.contentHash,
         chunk.characterCount,
         chunk.wordCount,
+        formatEmbedding(chunk.embedding),
       ],
     );
   }
