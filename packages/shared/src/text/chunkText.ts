@@ -82,6 +82,12 @@ export function chunkText(
       "chunkOverlap must be smaller than maxChunkSize",
     );
   }
+  if (minimumChunkSize < 0) {
+  throw new Error(
+    "minimumChunkSize cannot be negative",
+  );
+}
+  
 
   const text = input.trim();
 
