@@ -1,10 +1,21 @@
 # Distributed RAG Web Scraper Framework
+A scalable, distributed, fault-tolerant web scraping framework augmented with Retrieval-Augmented Generation (RAG) preparation capabilities.
 
-A scalable distributed web scraping and Retrieval-Augmented Generation (RAG) preparation framework built using **Node.js**, **TypeScript**, **Fastify**, **BullMQ**, **Redis**, and **PostgreSQL**.
+The system extracts data from multiple websites, processes and indexes collected content, and prepares it for natural-language question answering grounded in scraped sources.
+
+The architecture follows distributed systems principles by separating responsibilities into independent services communicating asynchronously through Redis queues.
+
+**Node.js**, **TypeScript**, **Fastify**, **BullMQ**, **Redis**, and **PostgreSQL**.
 
 The system is designed to crawl websites, extract useful content, process pages asynchronously using distributed workers, store structured data, and prepare documents for future RAG-based search and AI question-answering systems.
 
 ---
+
+# 🎥 Project Demonstration
+
+A  demonstration of the system execution is available here:
+
+(https://lh3.google.com/u/0/d/1VSGknzBrnEDQmoF4K1j04-ZNpcRXMcP9=w567-h423-p-k-nu-iv1?auditContext=thumbnail)
 
 # 🚀 Features
 
@@ -259,43 +270,7 @@ RAG Ready Data
 
 ---
 
-# 📂 Project Structure
 
-```
-distributed-rag-scraper/
-
-│
-├── apps/
-│
-│   ├── api/
-│   │   └── Fastify API server
-│   │
-│   ├── crawler-worker/
-│   │   └── Website crawling service
-│   │
-│   ├── scraper-worker/
-│   │   └── Web content extraction service
-│   │
-│   ├── processor-worker/
-│   │   └── Document processing service
-│   │
-│   └── web/
-│       └── Frontend application
-│
-│
-└── packages/
-    
-    ├── database/
-    │   └── PostgreSQL database layer
-    │
-    ├── queue/
-    │   └── BullMQ queue configuration
-    │
-    ├── shared/
-        └── Shared types and utilities
-```
-
----
 
 # 📦 Queue Architecture
 
@@ -455,20 +430,6 @@ Additional workers can be added without modifying the API.
 
 ---
 
-# 🔮 Future Improvements
-
-Possible future extensions:
-
-- Vector database integration
-- Semantic search engine
-- LLM-powered question answering
-- Authentication and authorization
-- Monitoring dashboard
-- Kubernetes deployment
-- Automatic worker scaling
-- Advanced document ranking
-
----
 
 # 🎯 Project Goals
 
