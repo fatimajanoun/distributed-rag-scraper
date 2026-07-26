@@ -1,4 +1,5 @@
 import Fastify from "fastify";
+import cors from "@fastify/cors";
 import { connectRedis } from "./queue/redis.js";
 import { healthRoutes } from "./routes/health.js";
 import {askRoutes} from "./routes/ask.js";
@@ -8,6 +9,9 @@ import { searchRoutes } from "./routes/semanticSearch.js";
 import { keywordSearchRoutes } from "./routes/keywordSearch.js";
 const app = Fastify({
   logger: true,
+});
+await app.register(cors, {
+  origin: "http://localhost:5173",
 });
 
 app.register(healthRoutes);
